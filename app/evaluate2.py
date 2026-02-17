@@ -3,10 +3,12 @@ from app.simulation.envs.Env import Env
 import gymnasium as gym
 from app.simulation.policies.PolicyEvaluation import PolicyEvaluation
 import pandas as pd
+from torch.utils.tensorboard import SummaryWriter
 from app.domain.Server import Server
 from gymnasium.envs.registration import register
 from app.simulation.policies.ChildPolicy2 import ChildPolicy2
 
+writer = SummaryWriter(log_dir="./eval_logs/final_76_run")
 root_path = "./instance_set"
 instance_set = range(50)
  
@@ -28,8 +30,8 @@ def check_solution(instance, solution_path):
 
     # Check if the customer is served after arrival
     if (df["start"] < df["arrival"]).any():
-            invalid_start = df[df["start"] < df["arrival"]]
-            return False, f"Some rows have start before arrival:\n{invalid_start}"
+        invalid_start = df[df["start"] < df["arrival"]]
+        return False, f"Some rows have start before arrival:\n{invalid_start}"
 
     # Check if customer served more than once
     if df["client"].duplicated().any():
@@ -91,28 +93,33 @@ def check_solution(instance, solution_path):
         return False, f"Server overlap detected:\n{bad[['server', 'start', 'end']]}"
     return is_valid, error
  
-for instance_id in instance_set: 
-	instance = Instance.create(Instance.SourceType.FILE,
-				f"{root_path}/timeline_{instance_id}.json",
-				f"{root_path}/average_matrix_{instance_id}.json",
-				f"{root_path}/appointments_{instance_id}.json",
-				f"{root_path}/unavailability_{instance_id}.json")
-	for run in range(NB_RUNS_INST):     
-		print(f"\n\nEvaluation of instance {instance_id} and run {run}")   
-		env = gym.make(env_id, mode=Env.MODE.TEST, instance=instance)
-		sol_file = f"result_tmp_{instance_id}_{run}.csv"
-		model.simulate(env, print_logs=False, save_to_csv=True, path="./results/tmp2/", file_name=sol_file)
-		policy_evaluation = PolicyEvaluation(instance.timeline, instance.appointments, clients_history=model.customers_history)
-		policy_evaluation.evaluate()
-		is_valid, error = check_solution(instance, "./results/tmp2/" + sol_file)
-		if not is_valid:
-			score = -1
-			print(f"Error in instance {instance}, {error}")
-			break
+for instance_id in instance_set:
+    instance = Instance.create(Instance.SourceType.FILE,
+                               f"{root_path}/timeline_{instance_id}.json",
+                               f"{root_path}/average_matrix_{instance_id}.json",
+                               f"{root_path}/appointments_{instance_id}.json",
+                               f"{root_path}/unavailability_{instance_id}.json")
+    for run in range(NB_RUNS_INST):
+        print(f"\n\nEvaluation of instance {instance_id} and run {run}")
+        env = gym.make(env_id, mode=Env.MODE.TEST, instance=instance)
+        sol_file = f"result_tmp_{instance_id}_{run}.csv"
+        model.simulate(env, print_logs=False, save_to_csv=True, path="./results/tmp2/", file_name=sol_file)
+        policy_evaluation = PolicyEvaluation(instance.timeline, instance.appointments, clients_history=model.customers_history)
+        policy_evaluation.evaluate()
+        is_valid, error = check_solution(instance, "./results/tmp2/" + sol_file)
+        if not is_valid:
+            score = -1
+            print(f"Error in instance {instance}, {error}")
+            break
+        # added log metrics to TensorBoard
+        writer.add_scalar("Evaluation/Waiting_Time_Score", policy_evaluation.grade_wait, instance_id)
+        writer.add_scalar("Evaluation/Appt_Compliance_Score", policy_evaluation.grade_appointment, instance_id)
+        writer.add_scalar("Evaluation/Unserved_Score", policy_evaluation.grade_number_of_unserved, instance_id)
+        writer.add_scalar("Evaluation/Final_Grade", policy_evaluation.final_grade, instance_id)
+        score += policy_evaluation.final_grade
 
-		score += policy_evaluation.final_grade
- 
-if is_valid:	
-	score /= len(instance_set) * NB_RUNS_INST
+writer.close()
+if is_valid:
+    score /= len(instance_set) * NB_RUNS_INST
  
 print(f"\nFinal score: {score}")		
