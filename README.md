@@ -10,8 +10,8 @@ This repository contains a Reinforcement Learning environment for optimizing que
 
    ```bash
    pip install -r requirements.txt
-```
-
+    ```
+    
 ## Generate Data
 Data will be generated in `app/data/data_files`.
 
