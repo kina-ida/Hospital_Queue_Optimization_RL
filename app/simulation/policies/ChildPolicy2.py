@@ -50,11 +50,13 @@ class ChildPolicy2(Policy):
             learning_env, 
             verbose=verbose,
             policy_kwargs=policy_kwargs, 
-            learning_rate=0.0003,
+            learning_rate=0.0002,      
             n_steps=2048, 
-            batch_size=64,
-            gamma=0.99
-        )
+            batch_size=128,           
+            gamma=0.98,               
+            ent_coef=0.01,            
+            tensorboard_log="./tensorboard_logs/"
+            )
         
         print(f"Starting training for {total_timesteps} steps...")
         self.model.learn(total_timesteps=total_timesteps)

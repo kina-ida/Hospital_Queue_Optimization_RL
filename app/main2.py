@@ -16,7 +16,7 @@ def main():
     
     model = ChildPolicy2("PPO_Solution") 
 
-    model.learn(scenario, 10000, 1)
+    model.learn(scenario, 100000, 1)
     
     model.model.save("ppo_2") 
 
