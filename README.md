@@ -48,3 +48,8 @@ python -m app.evaluate2
   [`app/data/results2/result_0.csv`](app/data/results2/result_0.csv).  
 - **Evaluation**: When running `app.evaluate2`, the detailed solution files for each instance are saved in the  
   `./results/tmp2/` directory.
+  
+## Monitoring and Visualization
+
+* **Training Logs**: Real-time training metrics, including entropy loss and reward convergence, are stored in `tensorboard_logs/PPO_1` for performance tracking.
+* **Evaluation Metrics**: Detailed performance breakdowns across the 50-instance test set are logged in `eval_logs/final_89_run`, allowing for comparative analysis of waiting times and appointment compliance via TensorBoard.
