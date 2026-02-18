@@ -8,7 +8,7 @@ from app.domain.Server import Server
 from gymnasium.envs.registration import register
 from app.simulation.policies.ChildPolicy2 import ChildPolicy2
 
-writer = SummaryWriter(log_dir="./eval_logs/final_76_run")
+writer = SummaryWriter(log_dir="./eval_logs/final_89_run")
 root_path = "./instance_set"
 instance_set = range(50)
  
